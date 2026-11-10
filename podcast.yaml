@@ -8,7 +8,7 @@ tts:
   voices:
     host:   { name: ko-KR-Chirp3-HD-Kore }     # clova: { speaker: vgoeun }
     expert: { name: ko-KR-Chirp3-HD-Charon }   # clova: { speaker: vdonghyun }
-  # Gemini Flash TTS (engine: google, same API key; enable the Agent Platform API on its project):
+  # Gemini Flash TTS (engine: google). NOT usable yet: Gemini voices reject API keys (401, OAuth only):
   #   host:   { name: Kore,   model: gemini-2.5-flash-tts, language: ko-KR }
   #   expert: { name: Charon, model: gemini-2.5-flash-tts, language: ko-KR, prompt: "차분하고 또박또박 설명하듯이" }
   # Local Qwen3-TTS (engine: qwen; pip install -r requirements-qwen.txt). Sohee is the only native Korean speaker:
