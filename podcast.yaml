@@ -3,11 +3,18 @@ max_minutes: 40
 chars_per_minute: 450   # measured ~446 with Chirp 3 HD voices
 
 tts:
-  engine: google            # google | clova | dryrun. Voice fields are engine-specific.
+  engine: google            # google | clova | qwen | dryrun. Voice fields are engine-specific.
   pause_ms: 400
   voices:
     host:   { name: ko-KR-Chirp3-HD-Kore }     # clova: { speaker: vgoeun }
     expert: { name: ko-KR-Chirp3-HD-Charon }   # clova: { speaker: vdonghyun }
+  # Gemini Flash TTS (engine: google, same API key; enable the Agent Platform API on its project):
+  #   host:   { name: Kore,   model: gemini-2.5-flash-tts, language: ko-KR }
+  #   expert: { name: Charon, model: gemini-2.5-flash-tts, language: ko-KR, prompt: "차분하고 또박또박 설명하듯이" }
+  # Local Qwen3-TTS (engine: qwen; pip install -r requirements-qwen.txt). Sohee is the only native Korean speaker:
+  #   host:   { speaker: Sohee, language: Korean }
+  #   expert: { speaker: Sohee, language: Korean, instruct: "낮고 차분한 목소리로 설명하듯이" }
+  qwen: { model: Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice, device: auto }   # used only when engine: qwen
 
 stt:
   engine: faster-whisper
@@ -22,6 +29,10 @@ youtube:
   privacy: private
   contains_synthetic_media: true   # YouTube "altered or synthetic content" disclosure (voices are TTS)
   category_id: "28"
+
+transistor:
+  enabled: true
+  status: draft     # draft | published. Publish yourself in the Transistor dashboard after review.
 
 retry:
   max_attempts: 3

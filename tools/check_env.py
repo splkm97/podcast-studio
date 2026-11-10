@@ -6,6 +6,7 @@ Exit 0 = ready, 1 = setup needed (run the podcast-setup skill),
 
 usage: python3 -m tools.check_env
 """
+import importlib.util
 import os
 import sys
 from pathlib import Path
@@ -17,6 +18,7 @@ except ImportError as e:
     sys.exit(2)
 
 TTS_KEYS = {"clova": ["CLOVA_CLIENT_ID", "CLOVA_CLIENT_SECRET"], "google": ["GOOGLE_TTS_API_KEY"]}
+TRANSISTOR_KEYS = ["TRANSISTOR_API_KEY"]
 DEFAULT_TOKEN = Path.home() / ".config/podcast-studio/youtube-token.json"
 
 
@@ -25,6 +27,8 @@ def problems(cfg: dict) -> list[str]:
     if engine == "dryrun":
         return []
     found = [f"{k} is empty" for k in TTS_KEYS.get(engine, []) if not os.environ.get(k)]
+    if engine == "qwen" and importlib.util.find_spec("qwen_tts") is None:
+        found.append("qwen-tts not installed (run: pip install -r requirements-qwen.txt)")
     secrets = os.environ.get("YOUTUBE_CLIENT_SECRETS")
     if not secrets:
         found.append("YOUTUBE_CLIENT_SECRETS is empty")
@@ -33,6 +37,8 @@ def problems(cfg: dict) -> list[str]:
     token = Path(os.environ.get("YOUTUBE_TOKEN", DEFAULT_TOKEN))
     if not token.is_file():
         found.append(f"YouTube token not found: {token} (run: python3 -m tools.upload_youtube --auth)")
+    if cfg.get("transistor", {}).get("enabled"):
+        found += [f"{k} is empty" for k in TRANSISTOR_KEYS if not os.environ.get(k)]
     return found
 
 

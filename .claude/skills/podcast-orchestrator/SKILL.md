@@ -1,6 +1,6 @@
 ---
 name: podcast-orchestrator
-description: 기술 팟캐스트 한 회차를 주제와 참고 자료만 받아 자료 수집부터 대본, TTS, 영상, YouTube 비공개 업로드까지 사람 개입 없이 끝까지 진행한다. "팟캐스트 만들어줘", "이 주제로 에피소드", "회차 제작", 주제와 링크를 주며 오디오나 영상 콘텐츠를 만들어 달라는 요청이면 반드시 이 스킬로 시작한다. 단계 스킬(podcast-research, podcast-script, tech-term-hangul, podcast-tts, podcast-video, podcast-upload)을 순서대로 부르고 품질 게이트로 진행 여부를 정한다.
+description: 기술 팟캐스트 한 회차를 주제와 참고 자료만 받아 자료 수집부터 대본, TTS, 영상, YouTube 비공개 업로드와 Transistor.fm 초안 업로드(Spotify 배포용)까지 사람 개입 없이 끝까지 진행한다. "팟캐스트 만들어줘", "이 주제로 에피소드", "회차 제작", 주제와 링크를 주며 오디오나 영상 콘텐츠를 만들어 달라는 요청이면 반드시 이 스킬로 시작한다. 단계 스킬(podcast-research, podcast-script, tech-term-hangul, podcast-tts, podcast-video, podcast-upload)을 순서대로 부르고 품질 게이트로 진행 여부를 정한다.
 ---
 
 # 팟캐스트 오케스트레이터
@@ -9,7 +9,7 @@ description: 기술 팟캐스트 한 회차를 주제와 참고 자료만 받아
 
 - **무인 실행이다.** 중간에 사용자에게 묻지 않는다. 판단이 필요하면 아래 규칙으로 정하고 이유를 로그에 남긴다.
 - **사람 검토 대신 게이트가 막는다.** 게이트를 통과하지 못한 산출물은 다음 단계로 넘기지 않는다.
-- **최종 안전망은 비공개 업로드다.** 공개 전환은 사용자가 직접 한다. 이 스킬은 공개 상태를 바꾸지 않는다.
+- **최종 안전망은 비공개 업로드다.** YouTube는 비공개, Transistor는 초안으로 올린다. 공개 전환과 발행은 사용자가 직접 한다. 이 스킬은 공개 상태를 바꾸지 않는다. Spotify는 Transistor에서 발행된 회차를 RSS로 가져가므로 사람이 발행하기 전에는 Spotify에도 나가지 않는다.
 - **AI 생성 콘텐츠로 표시해 올린다.** 음성이 TTS 합성이므로 업로드 시 YouTube의 변경·합성 콘텐츠 항목을 켠다 (`podcast.yaml`의 `youtube.contains_synthetic_media`, 기본 true).
 - **멈출 때는 정직하게 멈춘다.** 게이트를 우회하거나 기준을 낮춰 통과시키지 않는다.
 
@@ -28,7 +28,7 @@ python3 -m tools.check_env
 ```
 
 - 종료 코드 0이면 1단계로 간다. 드라이런은 항상 통과한다
-- 1이면 `.env`가 없거나 값이 빠졌거나 YouTube 토큰이 없는 것이다
+- 1이면 `.env`가 없거나 값이 빠졌거나(TTS·Transistor 키) YouTube 토큰이 없는 것이다
   - **대화형 세션**: podcast-setup 스킬을 실행한다. 사람이 키를 발급받고 브라우저로 인증해야 하므로 무인 원칙의 예외다. setup이 끝나 `check_env`가 0을 내면 원래 요청으로 돌아와 1단계부터 진행한다
   - **무인 실행**(`claude -p`): setup을 할 수 없다. 환경 오류로 바로 중단하고, report.md에 `check_env` 출력과 "대화형 세션에서 /podcast-setup 실행"을 사람이 할 일로 남긴다. 회차 폴더가 아직 없으면 채팅으로만 알린다
 - 그 밖의 종료 코드는 도구 환경 오류다. 재시도하지 않고 중단한다
@@ -45,7 +45,8 @@ script.json        대본 (src 원문 + tts 음차)
 gates/*.json       게이트 결과
 audio/             segment wav, timings.json, episode.wav
 episode.mp3 / subtitles.srt / episode.mp4
-upload.json        업로드 결과
+upload.json        YouTube 업로드 결과
+transistor.json    Transistor 업로드 결과
 state.json         진행 상태
 logs/run.log       실행 로그
 report.md          최종 보고
@@ -60,7 +61,7 @@ report.md          최종 보고
 | 3. TTS 정규화 | tech-term-hangul | `script_lint` (`python3 -m tools.lint_script`) |
 | 4. 음성 합성 | podcast-tts | `audio` (`tools.check_audio`), `stt` (`tools.verify_stt`) |
 | 5. 영상 | podcast-video | 렌더 성공 여부 |
-| 6. 업로드 | podcast-upload | `upload.json` 생성 여부 |
+| 6. 업로드 | podcast-upload | `upload.json`(YouTube), `transistor.json`(Transistor, `transistor.enabled`일 때) 생성 여부. 두 곳은 독립이라 한쪽이 실패해도 다른 쪽을 올린다 |
 
 모든 명령은 저장소 루트에서 실행한다. 게이트 스크립트는 통과 시 종료 코드 0, 실패 시 1, 환경 오류 시 그 밖의 코드를 낸다.
 
@@ -90,7 +91,8 @@ report.md          최종 보고
 
 끝나거나 멈추면 반드시 쓴다. 사용자가 보는 유일한 보고다.
 
-- 결과 한 줄: 업로드 완료(비공개, URL) 또는 중단(단계, 이유)
+- 결과 한 줄: 업로드 완료(YouTube 비공개 URL, Transistor 초안 URL) 또는 중단(단계, 이유)
+- Transistor에 올렸다면 사람이 할 일: 대시보드에서 초안을 확인하고 공개 발행하면 Spotify에 반영된다. 쇼가 아직 Spotify에 등록되지 않았다면 podcast-setup의 Spotify 등록 단계를 안내한다
 - 게이트 요약: 게이트별 통과 여부와 시도 횟수
 - 자동으로 바뀐 것: 대체된 출처, 삭제된 주장, 학습 사전에 추가된 표기
 - 중단이면 사람이 할 일: 무엇을 고치면 이어서 돌릴 수 있는지

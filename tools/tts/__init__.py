@@ -5,6 +5,7 @@ REGISTRY = {
     "clova": "tools.tts.clova:ClovaEngine",
     "dryrun": "tools.tts.dryrun:DryRunEngine",
     "google": "tools.tts.google:GoogleEngine",
+    "qwen": "tools.tts.qwen:QwenEngine",
 }
 
 

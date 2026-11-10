@@ -1,0 +1,3 @@
+# Optional: local Qwen3-TTS engine (tts.engine: qwen). Pulls torch; model weights download on first use.
+-r requirements.txt
+qwen-tts

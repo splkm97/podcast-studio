@@ -1,6 +1,6 @@
 ---
 name: podcast-setup
-description: 팟캐스트 파이프라인에 필요한 시크릿(.env)과 YouTube OAuth 토큰을 준비한다. .env 템플릿을 만들고, TTS 키(Google Cloud TTS 또는 CLOVA Voice)와 Google OAuth 클라이언트를 발급받는 절차를 안내하고, tools.check_env로 검증한다. 최초 설정, 키 교체, 토큰 만료 시, 또는 podcast-orchestrator의 사전 점검이 실패했을 때 사용한다.
+description: 팟캐스트 파이프라인에 필요한 시크릿(.env)과 YouTube OAuth 토큰을 준비한다. .env 템플릿을 만들고, TTS 키(Google Cloud TTS 또는 CLOVA Voice), Google OAuth 클라이언트, Transistor.fm API 키를 발급받는 절차와 Transistor 쇼를 Spotify에 등록하는 절차를 안내하고, tools.check_env로 검증한다. 최초 설정, 키 교체, 토큰 만료 시, 또는 podcast-orchestrator의 사전 점검이 실패했을 때 사용한다.
 ---
 
 # 사전 설정
@@ -38,6 +38,10 @@ GOOGLE_TTS_API_KEY=
 YOUTUBE_CLIENT_SECRETS=~/.config/podcast-studio/client_secret.json
 # Optional: token path (default ~/.config/podcast-studio/youtube-token.json)
 # YOUTUBE_TOKEN=
+# Transistor.fm (transistor.enabled: true)
+TRANSISTOR_API_KEY=
+# Optional when the account has one show
+TRANSISTOR_SHOW_ID=
 ```
 
 이미 쉘에서 export한 값은 `.env`보다 우선한다.
@@ -92,7 +96,20 @@ python3 -c "from pathlib import Path; from tools.common import load_config; from
 python3 -m tools.upload_youtube --auth
 ```
 
-### 6. 검증
+### 6. Transistor API 키 발급 (`TRANSISTOR_API_KEY`가 비어 있을 때)
+
+`podcast.yaml`의 `transistor.enabled`가 true일 때만 필요하다. 회차 음성(`episode.mp3`)을 Transistor.fm에 초안으로 올리는 데 쓴다. Transistor는 유료 서비스다(무료 체험 후 월 구독).
+
+1. Transistor(https://transistor.fm)에 가입하고 쇼(팟캐스트)를 만든다. 쇼 이름, 설명, 카테고리, 언어(한국어), 정사각형 커버 이미지(1400~3000px)를 채운다. 이 정보가 그대로 Spotify에 나간다
+2. 대시보드 → Account(계정) → API에서 API 키를 확인한다
+3. 키를 `.env`의 `TRANSISTOR_API_KEY`에 붙여 넣고 저장한다
+4. 쇼가 둘 이상이면 아래 명령으로 쇼 id를 확인해 `.env`의 `TRANSISTOR_SHOW_ID`에 넣는다. 쇼가 하나면 비워 둔다
+
+```
+python3 -m tools.upload_transistor --shows
+```
+
+### 7. 검증
 
 사용자가 `.env`를 저장했다고 하면 다시 확인한다.
 
@@ -102,7 +119,23 @@ python3 -m tools.check_env
 
 0이 나올 때까지 출력된 항목의 단계만 반복한다. 통과하면 "설정 완료"를 알린다. podcast-orchestrator에서 넘어왔다면 원래 요청으로 돌아가 이어서 진행한다.
 
+### 8. Spotify 등록 (쇼마다 최초 1회, 사람이 직접)
+
+Spotify에는 회차를 올리지 않는다. Transistor 쇼를 한 번 등록하면, 이후 Transistor에서 **발행한** 회차를 Spotify가 RSS로 자동으로 가져간다. 코드로 할 수 없는 단계라 사람에게 안내만 한다. 등록 여부는 사용자에게 물어서 확인한다.
+
+먼저 조건을 맞춘다.
+- 쇼 정보(이름, 설명, 카테고리, 언어)와 커버 이미지가 채워져 있다
+- 발행된 회차가 하나 이상 있다. 초안과 예약 회차는 치지 않는다. 파이프라인은 초안으로 올리므로 사용자가 첫 회차를 직접 발행해야 한다
+
+등록 방법:
+1. Transistor 대시보드에서 쇼를 고르고 **Distribution** 탭으로 간다
+2. Spotify 항목의 제출 버튼을 누른다. Transistor는 Spotify 공식 파트너라 별도 심사 양식 없이 자동 승인으로 제출된다
+3. 반영까지 보통 하루 정도 걸린다. 같은 탭에서 Apple Podcasts, YouTube Music, Amazon Music 등에도 제출할 수 있다
+
+등록 뒤에는 회차마다 Transistor에서 발행만 하면 된다. Spotify 통계는 Spotify for Creators(https://creators.spotify.com)에서 볼 수 있다. AI 합성 음성을 쓰므로 회차 설명에 TTS 합성 사실이 들어가 있는지 확인한다 (업로드 도구가 자동으로 넣는다).
+
 ## 하지 않는 것
 
 - `.env`나 client_secret JSON의 내용을 읽거나 채팅에 출력하지 않는다
+- Transistor 회차를 대신 발행하거나 Spotify 제출을 대신하지 않는다. 공개는 사람이 한다
 - `podcast.yaml`의 `tts.engine`을 사용자 동의 없이 `dryrun`으로 바꿔 점검을 피하지 않는다
