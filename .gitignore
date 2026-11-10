@@ -1,0 +1,9 @@
+episodes/
+__pycache__/
+.env
+.venv/
+client_secret*.json
+*token*.json
+.idea/
+.DS_Store
+*.pyc

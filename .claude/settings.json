@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m tools:*)",
+      "Bash(mkdir -p episodes/:*)",
+      "WebSearch",
+      "WebFetch"
+    ]
+  }
+}

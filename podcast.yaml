@@ -1,0 +1,27 @@
+episodes_dir: episodes
+max_minutes: 40
+chars_per_minute: 450   # measured ~446 with Chirp 3 HD voices
+
+tts:
+  engine: google            # google | clova | dryrun. Voice fields are engine-specific.
+  pause_ms: 400
+  voices:
+    host:   { name: ko-KR-Chirp3-HD-Kore }     # clova: { speaker: vgoeun }
+    expert: { name: ko-KR-Chirp3-HD-Charon }   # clova: { speaker: vdonghyun }
+
+stt:
+  engine: faster-whisper
+  model: small
+  max_cer: 0.15
+
+video:
+  cover: assets/cover.png
+  font: Noto Sans CJK KR
+
+youtube:
+  privacy: private
+  contains_synthetic_media: true   # YouTube "altered or synthetic content" disclosure (voices are TTS)
+  category_id: "28"
+
+retry:
+  max_attempts: 3
