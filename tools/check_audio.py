@@ -6,6 +6,7 @@
 
 usage: python3 -m tools.check_audio episodes/<id>
 """
+import os
 import re
 import subprocess
 import sys
@@ -32,10 +33,18 @@ def main():
     if total > cfg["max_minutes"] * 60:
         problems.append(f"total {total / 60:.1f} min > max_minutes {cfg['max_minutes']}")
 
-    out = subprocess.run(
-        ["ffmpeg", "-i", str(ep / "audio" / "episode.wav"), "-af",
-         f"silencedetect=noise=-45dB:d={MAX_SILENCE}", "-f", "null", "-"],
-        capture_output=True, text=True).stderr
+    try:
+        run = subprocess.run(
+            [os.environ.get("FFMPEG", "ffmpeg"), "-i", str(ep / "audio" / "episode.wav"), "-af",
+             f"silencedetect=noise=-45dB:d={MAX_SILENCE}", "-f", "null", "-"],
+            capture_output=True, text=True)
+    except OSError as e:
+        print(f"ffmpeg not runnable: {e}", file=sys.stderr)
+        sys.exit(2)
+    if run.returncode != 0:
+        print(f"ffmpeg failed ({run.returncode}), silence check did not run:\n{run.stderr[-500:]}", file=sys.stderr)
+        sys.exit(2)
+    out = run.stderr
     for start, dur in zip(re.findall(r"silence_start: ([\d.]+)", out),
                           re.findall(r"silence_duration: ([\d.]+)", out)):
         seg = next((t["id"] for t in timings if t["start"] <= float(start) < t["end"]), "pause")
