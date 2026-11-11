@@ -26,12 +26,17 @@ def build_srt(segs, timings) -> str:
     by_id = {s["id"]: s for s in segs}
     cues = []
     for t in timings:
-        sentences = [x for x in re.split(r"(?<=[.?!])\s+", by_id[t["id"]]["src"].strip()) if x]
-        total = sum(len(x) for x in sentences)
+        chunks = []
+        for sentence in re.split(r"(?<=[.?!])\s+", by_id[t["id"]]["src"].strip()):
+            lines = textwrap.wrap(sentence, LINE_WIDTH, break_on_hyphens=False)
+            chunks.extend("\n".join(lines[i:i + 3]) for i in range(0, len(lines), 3))
+        total = sum(len(chunk) for chunk in chunks)
+        consumed = 0
         cursor = t["start"]
-        for x in sentences:
-            end = cursor + (t["end"] - t["start"]) * len(x) / total
-            cues.append((cursor, end, "\n".join(textwrap.wrap(x, LINE_WIDTH, break_on_hyphens=False)[:3])))
+        for chunk in chunks:
+            consumed += len(chunk)
+            end = t["start"] + (t["end"] - t["start"]) * consumed / total
+            cues.append((cursor, end, chunk))
             cursor = end
     return "\n".join(f"{i}\n{ts(a)} --> {ts(b)}\n{txt}\n" for i, (a, b, txt) in enumerate(cues, 1))
 
