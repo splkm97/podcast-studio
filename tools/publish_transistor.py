@@ -5,7 +5,6 @@ considered. Without --yes it only prints the plan. Publishing makes episodes
 public and sends them to every app the show is distributed to (Spotify etc.).
 
 usage: python3 -m tools.publish_transistor                       # plan for all drafts
-       python3 -m tools.publish_transistor --yes                 # publish all drafts
        python3 -m tools.publish_transistor --yes episodes/<id> ...   # only these
 """
 import argparse
@@ -56,6 +55,8 @@ def main():
     ap.add_argument("episodes", nargs="*")
     ap.add_argument("--yes", action="store_true", help="actually publish")
     a = ap.parse_args()
+    if a.yes and not a.episodes:
+        ap.error("--yes requires explicit episode paths from the approved plan")
 
     plan = drafts([episode_dir(e) for e in a.episodes])
     for i, (ep, rec) in enumerate(plan, 1):
@@ -64,7 +65,7 @@ def main():
         print("no drafts to publish")
         return
     if not a.yes:
-        print(f"\n{len(plan)} drafts. Re-run with --yes to publish them in this order.")
+        print(f"\n{len(plan)} drafts. After approval, re-run with --yes and the approved episode paths explicitly.")
         return
     for ep, rec in plan:
         e = call("PATCH", f"/episodes/{rec['episode_id']}/publish",

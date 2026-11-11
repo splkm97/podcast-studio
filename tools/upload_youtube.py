@@ -71,6 +71,8 @@ def main():
         sys.exit(f"already uploaded: {read_json(done)['url']} (delete upload.json to re-upload)")
 
     cfg = load_config()["youtube"]
+    if cfg["privacy"] != "private":
+        sys.exit("youtube.privacy must be private for uploads; publish reviewed videos in YouTube Studio")
     episode = read_json(ep / "script.json")["episode"]
     body = {
         "snippet": {"title": episode["title"][:100], "description": description(ep, episode),

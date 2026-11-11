@@ -15,7 +15,7 @@ python3 -m tools.upload_transistor episodes/<id>   # episode.mp3 → transistor.
 ## 공통 규칙
 
 - **모든 게이트가 통과했을 때만** 실행한다. 하나라도 실패 기록이 남아 있으면 실행하지 않는다
-- **공개 상태를 바꾸지 않는다.** YouTube는 `youtube.privacy`(기본 private), Transistor는 `transistor.status`(기본 draft)를 따른다. 공개 전환과 발행은 사용자가 결과물을 확인한 뒤 직접 한다
+- **초안·비공개만 업로드한다.** 실행 전에 `youtube.privacy: private`, `transistor.status: draft`인지 확인한다. 다르면 설정 충돌로 중단하며 공개 설정을 그대로 실행하지 않는다. 업로드 도구도 이 조건을 강제한다. 공개 전환과 발행은 사용자가 결과물을 확인한 뒤 별도로 승인한다.
 - 제목과 설명은 `script.json`의 `episode`에서, 참고 자료 목록은 `sources.json`에서 만든다. 설명 끝에 TTS 합성 음성임을 밝힌다
 - **같은 회차를 두 번 올리지 않는다.** `upload.json`이나 `transistor.json`이 이미 있으면 해당 스크립트가 거부한다. 실패 후 재시도라도 이 파일들을 지우지 않는다
 - 인증 문제(토큰 없음, 키 없음, 갱신 실패)는 무인 실행에서 고칠 수 없다. 재시도하지 않고 중단해 report에 사람이 할 일을 남긴다
@@ -28,7 +28,7 @@ python3 -m tools.upload_transistor episodes/<id>   # episode.mp3 → transistor.
 
 ## Transistor
 
-- `episode.mp3`를 올리고 Transistor 쇼에 에피소드를 만든다. 기본은 `transistor.status: draft`라 초안으로만 남는다. 설명은 HTML로 만들어 참고 자료를 링크로 넣는다
+- `episode.mp3`를 올리고 Transistor 쇼에 에피소드를 만든다. `transistor.status: draft`만 허용하므로 초안으로 남는다. 설명은 HTML로 만들어 참고 자료를 링크로 넣는다.
 - 쇼는 `TRANSISTOR_SHOW_ID`로 정한다. 계정에 쇼가 하나뿐이면 비워 둬도 그 쇼를 쓴다. 쇼가 여럿인데 비어 있으면 스크립트가 쇼 목록을 보여 주고 멈춘다
 - 키가 없으면(`TRANSISTOR_API_KEY`) 사람이 podcast-setup 스킬의 Transistor 단계를 해야 한다
 - API는 10초에 10회로 제한된다. 회차 하나에 3~4회만 부르므로 연속 업로드도 문제없다

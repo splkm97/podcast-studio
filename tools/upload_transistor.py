@@ -87,7 +87,8 @@ def main():
     if done.exists():
         sys.exit(f"already uploaded to Transistor: {read_json(done)['share_url']}")
 
-    status = load_config()["transistor"]["status"]
+    if load_config()["transistor"]["status"] != "draft":
+        sys.exit("transistor.status must be draft for uploads; use tools.publish_transistor to publish reviewed episodes")
     episode = read_json(ep / "script.json")["episode"]
     sid = show_id()
     audio_url = upload_audio(ep / "episode.mp3")
@@ -96,8 +97,6 @@ def main():
         "episode[summary]": episode["description"].strip()[:500],
         "episode[description]": show_notes(ep, episode),
         "episode[audio_url]": audio_url, "episode[type]": "full"})["data"]
-    if status != "draft":
-        e = call("PATCH", f"/episodes/{e['id']}/publish", data={"episode[status]": status})["data"]
     write_json(done, {"episode_id": e["id"], "show_id": sid, "share_url": e["attributes"].get("share_url"),
                       "status": e["attributes"].get("status")})
     log(ep, "upload", f"transistor {e['attributes'].get('status')} {e['attributes'].get('share_url')}")

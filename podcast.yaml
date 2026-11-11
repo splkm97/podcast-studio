@@ -32,7 +32,7 @@ youtube:
 
 transistor:
   enabled: true
-  status: draft     # draft | published. Publish yourself in the Transistor dashboard after review.
+  status: draft         # Uploads require draft. Publish reviewed episodes separately.
 
 retry:
   max_attempts: 3
