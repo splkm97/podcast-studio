@@ -18,7 +18,7 @@ episodes/         회차별 산출물
 | 자료 수집 | podcast-research | links |
 | 대본 | podcast-script | factcheck |
 | TTS 정규화 | tech-term-hangul | script_lint |
-| 음성 합성 | podcast-tts | audio, stt |
+| 음성 합성 | podcast-tts | audio |
 | 영상 | podcast-video | 렌더 성공 |
 | 업로드 | podcast-upload | upload.json (YouTube), transistor.json (Transistor) |
 
@@ -135,7 +135,6 @@ Spotify에는 회차를 따로 올리지 않아요. Transistor 쇼를 한 번 �
 | `youtubeSignupRequired` (401) | 계정에 YouTube 채널이 없어요. 채널을 만든 뒤 다시 올려요 |
 | Google TTS 401 "API keys are not supported" | `GOOGLE_TTS_API_KEY`에 `AIza…` API 키가 아닌 값이 들어 있어요 |
 | `libx265` dyld 오류, 자막 필터 없음 | 일반 `ffmpeg` 빌드 문제예요. `ffmpeg-full`을 설치하고 `.env`의 `FFMPEG`에 경로를 적어요 |
-| faster-whisper `metadata_errors` TypeError | PyAV 버전 문제예요. `requirements.txt`의 `av<16`으로 다시 설치해요 |
 | Transistor 429 | API 한도(10초에 10회)예요. 도구가 기다렸다가 다시 시도해요. 몇 분간 막히면 잠시 뒤 다시 실행해요 |
 | `already uploaded` | 같은 회차를 두 번 올리지 않게 막는 기록(`upload.json`, `transistor.json`)이 있어요. 정말 다시 올릴 때만 그 파일을 정리해요 |
 
@@ -173,7 +172,7 @@ claude -p "팟캐스트 만들어줘. 주제: … 참고: …" --permission-mode
 
 ## 드라이런
 
-`podcast.yaml`에서 `tts.engine: dryrun`으로 바꾸면 API 비용 없이 흐름을 검증해요. 음성 대신 톤이 들어가고, STT 검증과 업로드는 건너뛰어요.
+`podcast.yaml`에서 `tts.engine: dryrun`으로 바꾸면 API 비용 없이 흐름을 검증해요. 음성 대신 톤이 들어가고, 업로드는 건너뛰어요.
 
 ## 로컬 회귀 테스트
 
@@ -181,6 +180,6 @@ claude -p "팟캐스트 만들어줘. 주제: … 참고: …" --permission-mode
 .venv/bin/python -m unittest discover -s tests -t . -v
 ```
 
-업로드 공개 설정 차단, 승인된 발행 범위, STT 전체 segment 검증, 긴 자막의 원문·시간 보존을 확인해요. 테스트는 외부 API를 대체하고 임시 회차만 사용하며 로컬 `.env`를 읽지 않아요.
+업로드 공개 설정 차단, 승인된 발행 범위, 긴 자막의 원문·시간 보존을 확인해요. 테스트는 외부 API를 대체하고 임시 회차만 사용하며 로컬 `.env`를 읽지 않아요.
 
-음성 복구에서 `--only <segment-id>`는 해당 WAV를 다시 합성하고 나머지 정상 캐시를 보존해요. `--force`는 전체 재합성용이에요. segment를 추가·분할·삭제했다면 STT는 전체를 다시 검증해요. 긴 자막은 세 줄을 넘는 부분을 삭제하지 않고 추가 cue로 나눠요.
+음성 복구에서 `--only <segment-id>`는 해당 WAV를 다시 합성하고 나머지 정상 캐시를 보존해요. `--force`는 전체 재합성용이에요. 긴 자막은 세 줄을 넘는 부분을 삭제하지 않고 추가 cue로 나눠요.

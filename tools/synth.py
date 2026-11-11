@@ -1,7 +1,7 @@
 """Synthesize segments, join them with pauses, write timings and episode.mp3.
 
 Segments whose tts text is unchanged since the last run are reused, so a
-retry after an STT failure only re-synthesizes what was edited.
+retry after a fix only re-synthesizes what was edited.
 
 usage: python3 -m tools.synth episodes/<id> [--only s001,s007] [--force]
 """

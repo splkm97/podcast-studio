@@ -1,6 +1,4 @@
 pyyaml
 requests
-faster-whisper
 google-api-python-client
 google-auth-oauthlib
-av<16  # faster-whisper 1.2.x passes metadata_errors to av.open(), removed in newer PyAV

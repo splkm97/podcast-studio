@@ -71,19 +71,3 @@ def finish_gate(ep: Path, gate: str, problems: list, extra: dict | None = None):
         print("  -", p)
     sys.exit(0 if passed else 1)
 
-
-def load_glossary(ep: Path | None = None) -> dict:
-    """English term -> Hangul from the skill glossaries, then the episode's own
-    glossary.md (later files win), so parallel episodes never edit shared files."""
-    ref = ROOT / ".claude/skills/tech-term-hangul/references"
-    terms = {}
-    files = [ref / "glossary.md", ref / "glossary-learned.md"] + ([ep / "glossary.md"] if ep else [])
-    for f in files:
-        if not f.exists():
-            continue
-        for line in f.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if line.startswith("- ") and " = " in line:
-                en, ko = line[2:].split(" = ", 1)
-                terms[en.strip()] = ko.split("#")[0].strip()
-    return terms

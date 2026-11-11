@@ -16,11 +16,6 @@ tts:
   #   expert: { speaker: Sohee, language: Korean, instruct: "낮고 차분한 목소리로 설명하듯이" }
   qwen: { model: Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice, device: auto }   # used only when engine: qwen
 
-stt:
-  engine: faster-whisper
-  model: small
-  max_cer: 0.15
-
 video:
   cover: assets/cover.png
   font: Noto Sans CJK KR

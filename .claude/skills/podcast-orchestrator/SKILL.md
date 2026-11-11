@@ -38,7 +38,7 @@ description: 기술 팟캐스트 제작 요청을 주제 발굴부터 자료 수
 
 선택 전에는 회차 폴더·state.json·report.md를 만들지 않는다. 탐색 상태와 결과는 discovery.md에만 두고, 후보와 다음 선택을 채팅에 보고한다. 선택 대기는 실패 게이트나 재시도 대상이 아니다.
 
-`podcast.yaml`의 `tts.engine`이 `dryrun`이면 **드라이런**이다. API 비용 없이 흐름만 검증하는 모드라서 `stt` 게이트와 업로드를 건너뛰고, report.md 첫 줄에 드라이런임을 밝힌다.
+`podcast.yaml`의 `tts.engine`이 `dryrun`이면 **드라이런**이다. API 비용 없이 흐름만 검증하는 모드라서 업로드를 건너뛰고, report.md 첫 줄에 드라이런임을 밝힌다.
 
 ## 사전 점검 (setup 라우트)
 
@@ -81,7 +81,7 @@ report.md          최종 보고
 | 1. 자료 수집 | podcast-research | `links` (`python3 -m tools.check_links`) |
 | 2. 대본 초안 | podcast-script | `factcheck` (스킬이 직접 작성) |
 | 3. TTS 정규화 | tech-term-hangul | `script_lint` (`python3 -m tools.lint_script`) |
-| 4. 음성 합성 | podcast-tts | `audio` (`tools.check_audio`), `stt` (`tools.verify_stt`) |
+| 4. 음성 합성 | podcast-tts | `audio` (`tools.check_audio`) |
 | 5. 영상 | podcast-video | 렌더 성공 여부 |
 | 6. 업로드 | podcast-upload | `upload.json`(YouTube), `transistor.json`(Transistor, `transistor.enabled`일 때) 생성 여부. 두 곳은 독립이라 한쪽이 실패해도 다른 쪽을 올린다 |
 
@@ -95,7 +95,7 @@ report.md          최종 보고
   - `links` 실패: 죽은 출처를 대체 출처로 바꾸거나 빼고, 그 출처에만 기대던 사실을 research.md에서 정리한다
   - `factcheck` 실패: 근거 없는 주장을 고치거나 삭제한다
   - `script_lint` 실패: 지적된 segment의 tts만 고친다
-  - `audio`/`stt` 실패: podcast-tts 스킬의 복구 절차를 따른다
+  - `audio` 실패: podcast-tts 스킬의 복구 절차를 따른다
 - 앞 단계 산출물을 고쳤다면 그 뒤 게이트는 모두 다시 돌린다 (예: 대본을 고치면 lint부터)
 - 환경 오류(인증 없음, 도구 미설치, 네트워크 장애)는 재시도하지 않고 바로 중단한다. 고칠 수 없는 원인이기 때문이다
 - 횟수를 다 쓰면 **중단**한다. 업로드는 절대 하지 않는다
@@ -118,6 +118,6 @@ report.md          최종 보고
 - 게이트 요약: 게이트별 통과 여부와 시도 횟수
 - 자동으로 바뀐 것: 대체된 출처, 삭제된 주장, 학습 사전에 추가된 표기
 - 중단이면 사람이 할 일: 무엇을 고치면 이어서 돌릴 수 있는지
-- 공개 전 확인 포인트: 확신이 낮았던 tts_notes, CER이 기준에 가까웠던 segment
+- 공개 전 확인 포인트: 확신이 낮았던 tts_notes. 발음은 자동 검증하지 않으므로 이 segment들을 사람이 들어 본다
 
 마지막에 채팅에도 report.md 경로와 결과 한 줄을 알린다.
