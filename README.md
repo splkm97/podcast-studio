@@ -1,6 +1,6 @@
 # podcast-studio
 
-주제와 참고 링크만 주면 Claude Code가 자료 수집 → 2인 대화 대본 → TTS 정규화 → 음성 합성 → 영상 → YouTube 비공개 업로드와 Transistor.fm 초안 업로드(Spotify 배포)까지 무인으로 진행하는 프로젝트예요.
+주제와 참고 링크를 주면 Claude Code가 자료 수집 → 2인 대화 대본 → TTS 정규화 → 음성 합성 → 영상 → YouTube 비공개 업로드와 Transistor.fm 초안 업로드(Spotify 배포)까지 진행하는 프로젝트예요. 주제가 없거나 글감 추천을 요청하면 먼저 후보를 발굴하고, 사용자가 주제를 선택한 뒤 제작을 시작해요.
 
 ## 구조
 
@@ -8,11 +8,13 @@
 .claude/skills/   단계별 스킬 + 오케스트레이터 (판단이 필요한 일)
 tools/            게이트와 합성·렌더·업로드 스크립트 (결정적인 일)
 podcast.yaml      설정
+discoveries/      주제 발굴 결과·출처 평가·사용자 선택 기록
 episodes/         회차별 산출물
 ```
 
 | 단계 | 스킬 | 게이트 |
 |---|---|---|
+| 주제 발굴 (조건부) | podcast-discover | 사용자 후보 선택 + 제작 의사 |
 | 자료 수집 | podcast-research | links |
 | 대본 | podcast-script | factcheck |
 | TTS 정규화 | tech-term-hangul | script_lint |
@@ -90,7 +92,7 @@ python3 -m tools.upload_youtube --auth
 
 동의 화면이 "테스트" 상태면 토큰이 7일 뒤 만료돼요. 업로드가 토큰 문제로 멈추면 `python3 -m tools.upload_youtube --auth`만 다시 실행하면 돼요.
 
-업로드는 항상 비공개이고 "변경·합성 콘텐츠"(AI 생성) 표시가 켜져요. 토큰 권한이 업로드뿐이라 공개 전환은 YouTube Studio에서 직접 해요.
+업로드는 항상 비공개이고 "변경·합성 콘텐츠"(AI 생성) 표시가 켜져요. 업로드 도구는 `youtube.privacy`가 `private`가 아니거나 `transistor.status`가 `draft`가 아니면 해당 플랫폼 업로드를 중단해요. 공개 전환은 YouTube Studio에서, Transistor 발행은 별도의 사용자 승인으로 진행해요.
 
 ### 6. Transistor.fm (Spotify 배포용)
 
@@ -146,6 +148,19 @@ claude
 > 팟캐스트 만들어줘. 주제: etcd 백업 자동화. 참고: https://…
 ```
 
+주제부터 찾을 때:
+
+```
+> AI·개발 실무 팟캐스트 글감을 추천해줘. 최신 동향과 오래가는 주제를 균형 있게.
+> discoveries/<id>/discovery.md의 C2로 팟캐스트 만들어줘.
+```
+
+`podcast-discover`는 블로그와 개별 글을 찾아 원문 근거·발행일·한계·기존 회차와의 차이를 평가하고, 키워드를 회차 질문으로 바꿔요. 결과는 `discoveries/<id>/discovery.md`에 저장해요. 유명한 블로그라는 이유만으로 모든 글을 검증됐다고 취급하지 않아요.
+
+주제가 없는 제작 요청도 이 단계로 들어가요. 주제가 이미 정해졌고 추천을 요청하지 않았다면 발굴을 건너뛰어요. 후보를 고르기 전에는 환경 점검·키 설정·음성 합성·업로드를 하지 않아요. 무인 실행도 주제를 임의로 고르지 않고 `awaiting_selection`으로 종료해요.
+
+추천만 요청했다면 후보 선택만으로 제작하지 않아요. 별도로 제작을 요청해야 해요. 원래 제작 요청이었다면 선택 후 이어서 진행해요. 선택한 질문·범위·사용자 선택 표현과 시각·제작 의사·출처·주의점은 회차의 `brief.md`에 선택 스냅샷으로 고정하고, `podcast-research`가 상세 근거를 확인해요. 같은 탐색에서 다른 후보를 골라도 기존 회차는 이 스냅샷으로 재개해요. 탐색 경로만 있고 선택 기록이 없으면 과거 승인을 추정하지 않고 확인을 요청해요.
+
 무인:
 
 ```
@@ -154,6 +169,18 @@ claude -p "팟캐스트 만들어줘. 주제: … 참고: …" --permission-mode
 
 결과는 `episodes/<id>/report.md`에 남아요. YouTube는 비공개로 올라가니, 영상을 확인한 뒤 YouTube Studio에서 직접 공개로 바꾸면 돼요. Transistor는 초안으로 올라가요. 확인한 뒤 대화형 세션에서 `/podcast-publish`를 실행하면 초안을 업로드 순서대로 발행하고, 발행된 회차는 RSS로 Spotify에 나가요. 이 스킬은 발행 전에 목록을 보여 주고 확인을 받아요.
 
+발행 명령은 승인받은 회차 경로를 모두 지정해야 해요. `python3 -m tools.publish_transistor --yes`처럼 목록을 생략하면 거부해요. 전체 초안을 승인했더라도 확인 이후 새로 생긴 초안은 자동으로 포함하지 않아요.
+
 ## 드라이런
 
 `podcast.yaml`에서 `tts.engine: dryrun`으로 바꾸면 API 비용 없이 흐름을 검증해요. 음성 대신 톤이 들어가고, STT 검증과 업로드는 건너뛰어요.
+
+## 로컬 회귀 테스트
+
+```
+.venv/bin/python -m unittest discover -s tests -t . -v
+```
+
+업로드 공개 설정 차단, 승인된 발행 범위, STT 전체 segment 검증, 긴 자막의 원문·시간 보존을 확인해요. 테스트는 외부 API를 대체하고 임시 회차만 사용하며 로컬 `.env`를 읽지 않아요.
+
+음성 복구에서 `--only <segment-id>`는 해당 WAV를 다시 합성하고 나머지 정상 캐시를 보존해요. `--force`는 전체 재합성용이에요. segment를 추가·분할·삭제했다면 STT는 전체를 다시 검증해요. 긴 자막은 세 줄을 넘는 부분을 삭제하지 않고 추가 cue로 나눠요.
