@@ -23,7 +23,7 @@ python3 -m tools.verify_stt episodes/<id>     # stt 게이트 (드라이런이�
 
 ### audio 게이트 실패
 
-- segment의 초당 글자 수가 이상하면 응답이 잘렸거나 깨진 것이다. `--only <id> --force`로 다시 합성한다
+- segment의 초당 글자 수가 이상하면 응답이 잘렸거나 깨진 것이다. `python3 -m tools.synth episodes/<id> --only <segment-id>`로 다시 합성한다. 지정한 ID는 캐시를 우회한다. `--force`는 정상 segment까지 전부 재합성하므로 국소 복구에 사용하지 않는다.
 - 긴 무음이 특정 segment 안에 있으면 그 segment의 tts에 엔진이 처리 못 하는 문자가 있는지 보고, 고친 뒤 다시 합성한다
 - 총 길이 초과는 대본 문제다. 오케스트레이터에 대본 단계로 되돌릴 것을 알린다
 
@@ -35,7 +35,7 @@ python3 -m tools.verify_stt episodes/<id>     # stt 게이트 (드라이런이�
 2. **문장 전체가 무너짐**: 너무 긴 문장, 숫자 나열, 영어 잔여 등. 문장을 나누거나 숫자를 말로 풀어 쓴다. 문장을 나눌 때는 src도 같이 나눠 짝을 맞춘다
 3. **인식기 쪽 오류로 보임**: 음차가 정상이고 인식 결과만 엉뚱하다. 그래도 기준을 낮추거나 게이트를 건너뛰지 않는다. 같은 뜻의 다른 문장으로 바꿔 다시 시도하고, 횟수를 다 쓰면 중단하고 report에 해당 segment를 남긴다
 
-고친 뒤에는 고친 segment만 다시 돌린다.
+segment ID 목록이 그대로이고 해당 segment의 tts만 고쳤다면 고친 ID만 다시 검증한다. 추가·분할·삭제로 ID 목록이 달라졌으면 아래 부분 검증 대신 `python3 -m tools.verify_stt episodes/<id>`로 전체 STT를 다시 실행한다. 현재 모든 segment에 검증 결과가 있어야 게이트를 통과한다.
 
 ```
 python3 -m tools.synth episodes/<id> --only s012

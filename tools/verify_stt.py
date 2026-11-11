@@ -100,7 +100,8 @@ def main():
         results[s["id"]] = {"id": s["id"], "cer": round(score, 3), "expected": s["tts"], "heard": heard}
 
     ordered = [results[s["id"]] for s in segs if s["id"] in results]
-    problems = [f"{r['id']}: CER {r['cer']}" for r in ordered if r["cer"] > cfg["max_cer"]]
+    problems = [f"{s['id']}: missing STT result" for s in segs if s["id"] not in results]
+    problems += [f"{r['id']}: CER {r['cer']}" for r in ordered if r["cer"] > cfg["max_cer"]]
     finish_gate(ep, "stt", problems, {"max_cer": cfg["max_cer"], "results": ordered})
 
 
